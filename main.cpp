@@ -60,7 +60,7 @@ void handle_client(tcp::socket socket, Schema schema)
         Tables* tables=dmbs.select_data(parsed_query,schema.name+"/",schema);
                 
         response=tables->print(tables);
-        // delete tables
+        delete tables;
         boost::asio::write(socket, boost::asio::buffer(response), error);
 
     } else {
