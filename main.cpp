@@ -64,14 +64,14 @@ void handle_client(tcp::socket socket, Schema schema)
         boost::asio::write(socket, boost::asio::buffer(response), error);
 
     } else {
-        throw runtime_error("Invalid query");
+        throw runtime_error("Invalid query. Reconnect.\n");
             }
         }
 
     }catch(std::exception& ex){
         std::cerr << "Ex: " << ex.what()<<endl;
         response = ex.what();
-        boost::asio::write(socket, boost::asio::buffer(response), error);
+        boost::asio::write(socket, boost::asio::buffer(response));
     }
 
 
@@ -90,9 +90,9 @@ int main(){
     try{
 
         boost::asio::io_context io_context;
-        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 7436));
+        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 7432));
 
-        std::cout << "Server is running on port 7436..." << std::endl;
+        std::cout << "Server is running on port 7432..." << std::endl;
 
         while (true) {
             tcp::socket socket(io_context);
