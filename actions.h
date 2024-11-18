@@ -162,6 +162,7 @@ bool evaluate_condition(const string& line, const string& condition, const strin
                 string value = tokens->head->next->next->data;
                 value.erase(0,1);
                 value.erase(value.size() - 1, 1);
+                if (value.find("'")!= string::npos) value.erase(value.size() - 1, 1);
                 ss << line;
                 
 
@@ -293,7 +294,7 @@ Tables* select_data(const SQLQuery& query, const string& file_path,Schema& schem
 
     table_name=table_name->next;
     if (table_name==nullptr) break;
-
+    if (table_name->data.find("\r")!=string::npos) table_name->data.erase(table_name->data.size()-1,1);
     currentTable->nextTable=new TablesNode();
     currentTable=currentTable->nextTable;
     currentTable->table=new Table(table_name->data);

@@ -202,41 +202,43 @@ struct Tables {
         return build_row;
     }
 
-    void print(Tables* tables){
+    string print(Tables* tables){
+        string selected;
         TablesNode* currentTable=tables->head;
         TableNode* currentRow=currentTable->table->head;
         string row;
         while (currentTable && currentTable->table->head->nextRow->row->head){
-            currentTable->table->head->row->print();
-            cout << "\t";
+            selected += buildRow(currentTable->table->head->row)+"\t";
             currentTable=currentTable->nextTable;
         }
-        cout <<endl;
+        selected+="\n";
         currentTable=tables->head;
         
-        printRows(currentTable,row);
+        printRows(currentTable,row,selected);
 
-
+    return selected;
     }
 
 
 
 
-    void printRows(TablesNode* table,string row){
+    void printRows(TablesNode* table,string row,string& selected){
         
         TableNode* currentRow=table->table->head->nextRow;
         string part_row=buildRow(currentRow->row);
         while(table->nextTable!=nullptr && currentRow->row->head && table->nextTable->table->head->nextRow->row->head){
-        printRows(table->nextTable,row+part_row+"\t");
+        printRows(table->nextTable,row+part_row+"\t",selected);
         currentRow=currentRow->nextRow;
         if (currentRow==nullptr) return;
         part_row=buildRow(currentRow->row);
         }
     if (table->nextTable==nullptr || table->nextTable->table->head->nextRow->row->head==nullptr){
         while(currentRow->row->head!= nullptr){
-            cout << row  << buildRow(currentRow->row);
+            selected+=row+buildRow(currentRow->row)+"\n";
+
+           // cout << row  << buildRow(currentRow->row);
             currentRow=currentRow->nextRow;
-            cout <<endl;
+            //cout <<endl;
         }
     }
 
