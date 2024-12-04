@@ -146,6 +146,7 @@ SQLQuery parse_select_query(const string& query) {
 
     // Получаем имя таблицы
     getline(ss,token,' ');
+    token.erase(token.size()-1,2);
     result.tablesName = new LinkedList();
     stringstream cur_ss1(token);
     //cur_ss.clear();

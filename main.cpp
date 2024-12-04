@@ -14,13 +14,18 @@ void handle_client(tcp::socket socket, Schema schema)
 {
     DBMS dmbs;
     SQLQuery parsed_query;
+    string welcome="Введите SQL запроc: ";
+
     string response;
     try {
 
         for (;;){
             char data[1024];
             boost::system::error_code error;
+            boost::asio::write(socket, boost::asio::buffer(welcome),error);
+            
             size_t length = socket.read_some(boost::asio::buffer(data), error);
+            boost::asio::write(socket, boost::asio::buffer("\n"),error);
             if (error == boost::asio::error::eof) {
                 break; // Соединение закрыто
             } else if (error) {

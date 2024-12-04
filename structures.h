@@ -243,7 +243,6 @@ struct Tables {
 
 
     void printRows(TablesNode* table,string row,string& selected){
-        
         TableNode* currentRow=table->table->head->nextRow;
         string part_row=buildRow(currentRow->row);
         while(table->nextTable!=nullptr && currentRow->row->head && table->nextTable->table->head->nextRow->row->head){
@@ -255,10 +254,7 @@ struct Tables {
     if (table->nextTable==nullptr || table->nextTable->table->head->nextRow->row->head==nullptr){
         while(currentRow->row->head!= nullptr){
             selected+=row+buildRow(currentRow->row)+"\n";
-
-           // cout << row  << buildRow(currentRow->row);
             currentRow=currentRow->nextRow;
-            //cout <<endl;
         }
     }
 
