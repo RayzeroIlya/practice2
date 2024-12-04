@@ -109,7 +109,7 @@ string build_condition_string(Node* node) {
     return ss.str();
 }
 
-bool evaluate_condition(const string& line, const string& condition, const string& column_names) {
+bool evaluate_condition(const string& line, const string& condition, const string& column_names, const string& table_name) {
     stringstream ss(condition);
     string token;
     LinkedList* tokens = new LinkedList();
@@ -137,8 +137,8 @@ bool evaluate_condition(const string& line, const string& condition, const strin
             Node* right_part = and_or_node->next;
 
             // Рекурсивно проверяем левую и правую части
-            bool left_result = evaluate_condition(line, build_condition_string(left_part), column_names);
-            bool right_result = evaluate_condition(line, build_condition_string(right_part), column_names);
+            bool left_result = evaluate_condition(line, build_condition_string(left_part), column_names,"");
+            bool right_result = evaluate_condition(line, build_condition_string(right_part), column_names,"");
 
             // Возвращаем результат в соответствии с оператором
             if (operator_token == "AND") {
@@ -148,7 +148,9 @@ bool evaluate_condition(const string& line, const string& condition, const strin
             }
         }
     }
+
                 if(tokens->head->data == "WHERE") tokens->remove("WHERE");
+                if (column_names.find(tokens->head->data) == string::npos) return true;
                 if (tokens->head->next->data == "=") {
                 string column = tokens->head->data;
                 stringstream ss(column_names);
@@ -162,13 +164,13 @@ bool evaluate_condition(const string& line, const string& condition, const strin
                 string value = tokens->head->next->next->data;
                 value.erase(0,1);
                 value.erase(value.size() - 1, 1);
-                if (value.find("'")!= string::npos) value.erase(value.size() - 1, 1);
-                ss << line;
-                
-
+                stringstream ss1(line);
                 string current_value;
-                while (getline(ss, current_value,',') && count!=0){
-                    count--;
+                while (getline(ss1, current_value,',') && count!=0){
+                count--;
+                }
+                if (!table_name.empty()) {
+                if (column_name == column && current_value==value) return true;
                 }
                 if (current_value == value) {
                     return current_value == value;
@@ -197,7 +199,7 @@ void delete_from_csv(const Schema& schema, const SQLQuery& query) {
         getline(infile,column_names);
         outfile << column_names << endl;
         while (getline(infile, line)) {
-            if (!evaluate_condition(line, query.condition, column_names)) {
+            if (!evaluate_condition(line, query.condition, column_names,"")) {
                 // Если условие не выполняется, записываем строку в временный файл
                 outfile << line << endl;
             }
@@ -239,15 +241,14 @@ Tables* select_data(const SQLQuery& query, const string& file_path,Schema& schem
     getline(fin,row);
     stringstream ss(row);
     while (getline(ss,value,',')){
-        columns->push_back(value);
+        columns->push_back(currentTable->table->name+"."+value);
     } // Название колонок
     LinkedList* query_columns=query.columns;
-
     Node* currentColumn=columns->head;
-
     TableNode* currentTableRow = currentTable->table->head;
-    while(currentTableRow!=nullptr && currentColumn!=nullptr) {
-        if (query_columns->find(currentColumn->data) || currentColumn->data==currentTable->table->name+"_pk"){
+    while(currentTableRow!=nullptr && currentColumn!=nullptr ) {
+        if ((query_columns->find(currentColumn->data) && query_columns->head!=nullptr) 
+        || query_columns->head==nullptr || currentColumn->data==table_name->data+"."+currentTable->table->name+"_pk"){
             currentTableRow->row->push_back(currentColumn->data);
                 if (currentColumn->data==currentTable->table->name+"_pk") {
                 currentColumn=currentColumn->next;
@@ -255,7 +256,6 @@ Tables* select_data(const SQLQuery& query, const string& file_path,Schema& schem
             };
         }
             currentColumn=currentColumn->next;
-
     }
     currentTableRow=currentTableRow->nextRow;
     currentTableRow=new TableNode();
@@ -263,43 +263,35 @@ Tables* select_data(const SQLQuery& query, const string& file_path,Schema& schem
 
     currentColumn=columns->head;
     while(fin.is_open() && getline(fin,row)){
-    
-    
         stringstream ss(row);
-
-
         while(getline(ss,value,',') && currentColumn!= nullptr) {
-        if (query_columns->find(currentColumn->data) || currentColumn->data==currentTable->table->name+"_pk"){
+         if (query_columns->head==nullptr) {
             currentTableRow->row->push_back(value);
-
+         }   
+        else if (query_columns->find(currentColumn->data) || currentColumn->data==table_name->data+"."+currentTable->table->name+"_pk"){
+            currentTableRow->row->push_back(value);
             if (currentColumn->data==currentTable->table->name+"_pk") {
                 currentColumn=currentColumn->next;
                 continue;
             };
-
         }
         currentColumn=currentColumn->next;
-
-
         }
         currentTableRow->nextRow=new TableNode();
         currentTableRow=currentTableRow->nextRow;
-
         currentColumn=columns->head;
-     
-     
      }
     columns->clear();
   //  delete columns;
 
     table_name=table_name->next;
     if (table_name==nullptr) break;
-    if (table_name->data.find("\r")!=string::npos) table_name->data.erase(table_name->data.size()-1,1);
+
     currentTable->nextTable=new TablesNode();
     currentTable=currentTable->nextTable;
     currentTable->table=new Table(table_name->data);
     fin.close();
-}
+} ////
     fin.close();
 
     if (!query.condition.empty()) {
@@ -312,7 +304,7 @@ Tables* select_data(const SQLQuery& query, const string& file_path,Schema& schem
         currentRow=currentRow->nextRow;
             while (currentRow->row->head){
                 TableNode* temp=currentRow;    
-                if (!evaluate_condition(tables->buildRow(currentRow->row),cond,column_names)){
+                if (!evaluate_condition(tables->buildRow(currentRow->row),cond,column_names,currentTable->table->name)){
                     prevRow->nextRow=currentRow->nextRow;
                     temp->row->clear();
                     delete temp;
@@ -324,7 +316,6 @@ Tables* select_data(const SQLQuery& query, const string& file_path,Schema& schem
             }
             currentTable=currentTable->nextTable;
     }
-
 }
      return tables;
 }
