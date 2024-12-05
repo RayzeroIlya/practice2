@@ -164,6 +164,7 @@ bool evaluate_condition(const string& line, const string& condition, const strin
                 string value = tokens->head->next->next->data;
                 value.erase(0,1);
                 value.erase(value.size() - 1, 1);
+                if (value.find('\'') != string::npos) value.erase(value.size()-1,1);
                 stringstream ss1(line);
                 string current_value;
                 while (getline(ss1, current_value,',') && count!=0){
